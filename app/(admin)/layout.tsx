@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AdminNav from '@/components/admin/AdminNav'
+import IOSInstallBanner from '@/components/IOSInstallBanner'
 
 /**
  * Admin layout — server component.
@@ -37,6 +38,9 @@ export default async function AdminLayout({
 
       {/* Fixed bottom navigation — renders as a Client Component */}
       <AdminNav />
+
+      {/* iOS PWA install prompt — shown above the nav */}
+      <IOSInstallBanner />
     </div>
   )
 }
