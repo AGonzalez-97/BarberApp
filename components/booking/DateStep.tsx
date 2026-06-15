@@ -20,9 +20,11 @@ type CalendarDay = {
   dayName: string
   enabled: boolean
   isToday: boolean
+  outOfMonth: boolean
 }
 
-const DAY_NAMES = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']
+const DAY_NAMES = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'] // indexed by getDay() (0=sun)
+const HEADER_DAYS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'] // mon-first grid
 const MONTH_NAMES = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
@@ -41,31 +43,44 @@ function toLocalDateString(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
-function buildCalendarDays(bitmask: number, weeksAhead = 6): CalendarDay[] {
+function buildCalendarDays(bitmask: number): CalendarDay[] {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const todayStr = toLocalDateString(today)
 
+  const year = today.getFullYear()
+  const month = today.getMonth()
+
+  // Grid starts on the Monday of the week containing the 1st of the month
+  const firstOfMonth = new Date(year, month, 1)
+  const startDow = firstOfMonth.getDay()
+  const startOffset = startDow === 0 ? -6 : 1 - startDow
+  const gridStart = new Date(firstOfMonth)
+  gridStart.setDate(firstOfMonth.getDate() + startOffset)
+
+  // Grid ends on the Sunday of the week containing the last day of the month
+  const lastOfMonth = new Date(year, month + 1, 0)
+  const endDow = lastOfMonth.getDay()
+  const endOffset = endDow === 0 ? 0 : 7 - endDow
+  const gridEnd = new Date(lastOfMonth)
+  gridEnd.setDate(lastOfMonth.getDate() + endOffset)
+
   const days: CalendarDay[] = []
-  const cursor = new Date(today)
+  const cursor = new Date(gridStart)
 
-  const dow = cursor.getDay()
-  const offsetToMon = dow === 0 ? -6 : 1 - dow
-  cursor.setDate(cursor.getDate() + offsetToMon)
-
-  const totalDays = weeksAhead * 7
-
-  for (let i = 0; i < totalDays; i++) {
+  while (cursor <= gridEnd) {
     const d = new Date(cursor)
     const dateStr = toLocalDateString(d)
+    const inCurrentMonth = d.getMonth() === month && d.getFullYear() === year
     const isPast = d < today && dateStr !== todayStr
     days.push({
       date: d,
       dateStr,
       dayNum: d.getDate(),
       dayName: DAY_NAMES[d.getDay()],
-      enabled: !isPast && isDayEnabled(d, bitmask),
+      enabled: inCurrentMonth && !isPast && isDayEnabled(d, bitmask),
       isToday: dateStr === todayStr,
+      outOfMonth: !inCurrentMonth,
     })
     cursor.setDate(cursor.getDate() + 1)
   }
@@ -156,11 +171,18 @@ export function DateStep({ serviceId }: DateStepProps) {
     )
   }
 
-  const calDays = buildCalendarDays(tenantConfig.available_days, 6)
+  const calDays = buildCalendarDays(tenantConfig.available_days)
   const weeks: CalendarDay[][] = []
   for (let i = 0; i < calDays.length; i += 7) {
     weeks.push(calDays.slice(i, i + 7))
   }
+
+  const now = new Date()
+  const currentMonthLabel =
+    MONTH_NAMES[now.getMonth()].charAt(0).toUpperCase() +
+    MONTH_NAMES[now.getMonth()].slice(1) +
+    ' ' +
+    now.getFullYear()
 
   const displayDate = selectedDate
     ? (() => {
@@ -196,8 +218,10 @@ export function DateStep({ serviceId }: DateStepProps) {
 
         {/* ── Calendar ─────────────────────────────────────────────────────── */}
         <section className="mt-8 mb-6">
+          <p className="mb-3 text-sm font-semibold text-zinc-300">{currentMonthLabel}</p>
+
           <div className="mb-2 grid grid-cols-7 text-center">
-            {DAY_NAMES.map((d) => (
+            {HEADER_DAYS.map((d) => (
               <span key={d} className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
                 {d}
               </span>
@@ -205,50 +229,43 @@ export function DateStep({ serviceId }: DateStepProps) {
           </div>
 
           <div className="space-y-1">
-            {weeks.map((week, wi) => {
-              const firstEnabled = week.find((d) => d.date.getDate() === 1)
-              return (
-                <div key={wi}>
-                  {firstEnabled && (
-                    <p className="mb-1 mt-3 text-xs font-semibold capitalize text-zinc-500">
-                      {MONTH_NAMES[firstEnabled.date.getMonth()]}
-                    </p>
-                  )}
-                  <div className="grid grid-cols-7 gap-1">
-                    {week.map((day) => {
-                      const isSelected = selectedDate === day.dateStr
-                      const isBlocked = blockedDates.has(day.dateStr)
-                      const isAvailable = day.enabled && !isBlocked
-                      return (
-                        <button
-                          key={day.dateStr}
-                          ref={isSelected ? selectedRef : null}
-                          onClick={() => isAvailable && setSelectedDate(day.dateStr)}
-                          disabled={!isAvailable}
-                          aria-pressed={isSelected}
-                          aria-label={`${day.dayName} ${day.dayNum}${isBlocked ? ' — no disponible' : ''}`}
-                          className={[
-                            'flex h-10 w-full flex-col items-center justify-center rounded-xl text-sm font-medium transition-all',
-                            isSelected
-                              ? 'bg-amber-400 text-zinc-900 font-bold'
-                              : day.isToday && isAvailable
-                              ? 'bg-zinc-900 text-white ring-2 ring-amber-400/60 hover:bg-zinc-800'
-                              : isAvailable
-                              ? 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700'
-                              : 'cursor-not-allowed bg-transparent text-zinc-700',
-                          ].join(' ')}
-                        >
-                          <span className="leading-none">{day.dayNum}</span>
-                          {day.isToday && !isSelected && (
-                            <span className="mt-0.5 h-1 w-1 rounded-full bg-amber-400" />
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
+            {weeks.map((week, wi) => (
+              <div key={wi} className="grid grid-cols-7 gap-1">
+                {week.map((day) => {
+                  if (day.outOfMonth) {
+                    return <div key={day.dateStr} className="h-10" />
+                  }
+                  const isSelected = selectedDate === day.dateStr
+                  const isBlocked = blockedDates.has(day.dateStr)
+                  const isAvailable = day.enabled && !isBlocked
+                  return (
+                    <button
+                      key={day.dateStr}
+                      ref={isSelected ? selectedRef : null}
+                      onClick={() => isAvailable && setSelectedDate(day.dateStr)}
+                      disabled={!isAvailable}
+                      aria-pressed={isSelected}
+                      aria-label={`${day.dayName} ${day.dayNum}${isBlocked ? ' — no disponible' : ''}`}
+                      className={[
+                        'flex h-10 w-full flex-col items-center justify-center rounded-xl text-sm font-medium transition-all',
+                        isSelected
+                          ? 'bg-amber-400 text-zinc-900 font-bold'
+                          : day.isToday && isAvailable
+                          ? 'bg-zinc-900 text-white ring-2 ring-amber-400/60 hover:bg-zinc-800'
+                          : isAvailable
+                          ? 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700'
+                          : 'cursor-not-allowed bg-transparent text-zinc-700',
+                      ].join(' ')}
+                    >
+                      <span className="leading-none">{day.dayNum}</span>
+                      {day.isToday && !isSelected && (
+                        <span className="mt-0.5 h-1 w-1 rounded-full bg-amber-400" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
           </div>
         </section>
 

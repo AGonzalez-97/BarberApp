@@ -97,7 +97,7 @@ export default function AdminNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
       aria-label="Navegación principal"
     >
       <ul className="flex h-16 items-stretch">
@@ -110,15 +110,15 @@ export default function AdminNav() {
                 className={[
                   'flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors',
                   isActive
-                    ? 'text-gray-900'
-                    : 'text-gray-400 hover:text-gray-600',
+                    ? 'text-gray-900 dark:text-white'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300',
                 ].join(' ')}
                 aria-current={isActive ? 'page' : undefined}
               >
                 <span
                   className={[
                     'flex h-7 w-7 items-center justify-center rounded-full transition-colors',
-                    isActive ? 'bg-gray-900 text-white' : '',
+                    isActive ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : '',
                   ].join(' ')}
                 >
                   {item.icon}

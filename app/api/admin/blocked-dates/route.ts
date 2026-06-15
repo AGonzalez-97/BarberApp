@@ -56,7 +56,9 @@ export async function DELETE(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const date = request.nextUrl.searchParams.get('date')
-  if (!date) return NextResponse.json({ error: 'Missing date' }, { status: 400 })
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return NextResponse.json({ error: 'Invalid date' }, { status: 400 })
+  }
 
   const service = createServiceClient()
   const { error } = await service

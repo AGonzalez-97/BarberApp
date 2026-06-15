@@ -133,15 +133,21 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (bookingError) {
-    // Check for unique constraint violations
     const msg = bookingError.message ?? ''
-    if (msg.includes('uniq_active_booking_per_client') || msg.includes('23505')) {
+    if (msg.includes('uniq_active_booking_per_client')) {
       return NextResponse.json(
         { error: 'Ya tenés un turno activo. Cancelalo primero para reservar uno nuevo.' },
         { status: 409 },
       )
     }
-    if (msg.includes('uniq_slot_per_tenant') || msg.includes('23505')) {
+    if (msg.includes('uniq_slot_per_tenant')) {
+      return NextResponse.json(
+        { error: 'El turno ya fue tomado. Por favor elegí otro horario.' },
+        { status: 409 },
+      )
+    }
+    // Generic unique violation fallback — shouldn't happen if constraints are named correctly
+    if (msg.includes('23505')) {
       return NextResponse.json(
         { error: 'El turno ya fue tomado. Por favor elegí otro horario.' },
         { status: 409 },

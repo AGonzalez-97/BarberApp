@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   })
 
   if (error) {
+    console.error('[api/slots] get_available_slots RPC failed:', error.message)
     return NextResponse.json({ error: 'Failed to fetch available slots' }, { status: 500 })
   }
 

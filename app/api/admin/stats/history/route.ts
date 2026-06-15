@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
     .gte('created_at', since.toISOString())
     .order('created_at', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[api/admin/stats/history] cuts query failed:', error.message)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   // Group by date in Argentina timezone (UTC-3)
   const byDate: Record<string, { cuts: number; revenue: number }> = {}

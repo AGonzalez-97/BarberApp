@@ -37,8 +37,21 @@ function checkRateLimit(ip: string, max: number, windowMs: number): boolean {
   return true
 }
 
+const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // CSRF: verify Origin header on state-mutating admin API requests.
+  // SameSite=Lax on auth cookies already blocks cross-site attacks in modern browsers;
+  // this adds explicit defense-in-depth at the edge.
+  if (!CSRF_SAFE_METHODS.has(request.method) && pathname.startsWith('/api/admin')) {
+    const origin = request.headers.get('origin')
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (origin && appUrl && origin !== appUrl) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  }
 
   // Rate limit POST requests to sensitive public endpoints
   const rateConfig = RATE_LIMIT_ROUTES[pathname]

@@ -5,3 +5,56 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* ── Admin dark mode — global overrides ─────────────────────────────────────
+   Instead of adding dark: variants to every component, we override the most
+   common Tailwind utility classes when .dark is active on <html>.
+   Zinc-950/900/800 palette mirrors the public-facing landing page.
+────────────────────────────────────────────────────────────────────────────── */
+
+/* Backgrounds */
+.dark .bg-white          { background-color: #18181b; } /* zinc-900 */
+.dark .bg-gray-50        { background-color: #09090b; } /* zinc-950 */
+.dark .bg-gray-100       { background-color: #27272a; } /* zinc-800 */
+.dark .bg-gray-200       { background-color: #3f3f46; } /* zinc-700 */
+.dark .hover\:bg-gray-50:hover  { background-color: #27272a; }
+.dark .hover\:bg-gray-100:hover { background-color: #3f3f46; }
+.dark .active\:bg-gray-100:active { background-color: #3f3f46; }
+
+/* Status-tinted cards */
+.dark .bg-orange-50  { background-color: rgba(124,45,18,0.25); }
+.dark .bg-blue-50    { background-color: rgba(23,37,84,0.35); }
+.dark .bg-green-50   { background-color: rgba(20,83,45,0.25); }
+.dark .bg-violet-50  { background-color: rgba(76,29,149,0.25); }
+.dark .bg-violet-100 { background-color: rgba(76,29,149,0.35); }
+
+/* Borders & rings */
+.dark .border-gray-100 { border-color: #27272a; }
+.dark .border-gray-200 { border-color: #3f3f46; }
+.dark .ring-gray-200   { --tw-ring-color: #3f3f46; }
+.dark .divide-gray-100 > * + * { border-color: #27272a; }
+.dark .divide-gray-50  > * + * { border-color: #18181b; }
+.dark .divide-y.divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #27272a; }
+
+/* Text */
+.dark .text-gray-900 { color: #fafafa; }  /* zinc-50 */
+.dark .text-gray-700 { color: #d4d4d8; }  /* zinc-300 */
+.dark .text-gray-600 { color: #a1a1aa; }  /* zinc-400 */
+.dark .text-gray-500 { color: #71717a; }  /* zinc-500 */
+
+/* Input fields */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #27272a;
+  border-color: #3f3f46;
+  color: #fafafa;
+}
+.dark input::placeholder,
+.dark textarea::placeholder { color: #71717a; }
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #a1a1aa;
+  outline-color: #a1a1aa;
+}

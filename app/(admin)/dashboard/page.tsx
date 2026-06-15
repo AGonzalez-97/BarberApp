@@ -2,62 +2,18 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { TENANT_ID } from '@/lib/tenant'
 import StatsCard from '@/components/admin/StatsCard'
-import DashboardCharts from '@/components/admin/DashboardCharts'
+import DashboardClient from '@/components/admin/DashboardClient'
 
 export const revalidate = 60
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Formats a numeric value as ARS currency with thousands separator. */
 function formatARS(value: number | null | undefined): string {
   if (value === null || value === undefined || value === 0) return '$0'
-  return (
-    '$' +
-    Math.round(value)
-      .toString()
-      .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  )
+  return '$' + Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
-
-const DAY_NAMES: Record<number, string> = {
-  0: 'Domingo',
-  1: 'Lunes',
-  2: 'Martes',
-  3: 'Miércoles',
-  4: 'Jueves',
-  5: 'Viernes',
-  6: 'Sábado',
-}
-
-function formatHourRange(hour: number): string {
-  const start = hour.toString().padStart(2, '0') + ':00'
-  const end = (hour + 1).toString().padStart(2, '0') + ':00'
-  return `${start} – ${end}`
-}
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DailyStats {
   total_cuts: number
   total_revenue: number
-}
-
-interface WeeklyStats {
-  week_start: string
-  total_cuts: number
-  total_revenue: number
-}
-
-interface MonthlyStats {
-  month_start: string
-  total_cuts: number
-  total_revenue: number
-}
-
-interface LowTrafficSlot {
-  day_of_week: number
-  hour_of_day: number
-  avg_bookings: number
 }
 
 interface TodayMovement {
@@ -69,14 +25,10 @@ interface TodayMovement {
   services: { name: string } | null
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function getTodayARGRange(): { start: Date; end: Date } {
   const now = new Date()
-  // Argentina is UTC-3 (no DST). Subtract 3h to get the Argentina date.
   const argNow = new Date(now.getTime() - 3 * 60 * 60 * 1000)
-  const date = argNow.toISOString().slice(0, 10) // "YYYY-MM-DD"
-  // Midnight ART = 03:00 UTC
+  const date = argNow.toISOString().slice(0, 10)
   const start = new Date(`${date}T03:00:00.000Z`)
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
   return { start, end }
@@ -90,8 +42,6 @@ function formatMovementTime(isoString: string): string {
     timeZone: 'America/Argentina/Buenos_Aires',
   })
 }
-
-// ─── Data fetching ────────────────────────────────────────────────────────────
 
 async function fetchTodayMovements(): Promise<TodayMovement[]> {
   const service = createServiceClient()
@@ -107,74 +57,73 @@ async function fetchTodayMovements(): Promise<TodayMovement[]> {
   return data ?? []
 }
 
-async function fetchStats() {
+async function fetchDailyStats() {
   const supabase = createClient()
-
-  const [dailyResult, weeklyResult, monthlyResult, lowTrafficResult] =
-    await Promise.all([
-      supabase
-        .from('daily_stats')
-        .select('total_cuts, total_revenue')
-        .eq('tenant_id', TENANT_ID)
-        .maybeSingle<DailyStats>(),
-
-      supabase
-        .from('weekly_stats')
-        .select('week_start, total_cuts, total_revenue')
-        .eq('tenant_id', TENANT_ID)
-        .order('week_start', { ascending: false })
-        .limit(1)
-        .maybeSingle<WeeklyStats>(),
-
-      supabase
-        .from('monthly_stats')
-        .select('month_start, total_cuts, total_revenue')
-        .eq('tenant_id', TENANT_ID)
-        .order('month_start', { ascending: false })
-        .limit(1)
-        .maybeSingle<MonthlyStats>(),
-
-      supabase
-        .from('low_traffic_slots')
-        .select('day_of_week, hour_of_day, avg_bookings')
-        .eq('tenant_id', TENANT_ID)
-        .order('avg_bookings', { ascending: true })
-        .limit(8)
-        .returns<LowTrafficSlot[]>(),
-    ])
-
-  return {
-    daily: dailyResult.data,
-    weekly: weeklyResult.data,
-    monthly: monthlyResult.data,
-    lowTraffic: lowTrafficResult.data ?? [],
-  }
+  const { data } = await supabase
+    .from('daily_stats')
+    .select('total_cuts, total_revenue')
+    .eq('tenant_id', TENANT_ID)
+    .maybeSingle<DailyStats>()
+  return data
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default async function DashboardPage() {
-  const [{ daily, weekly, monthly, lowTraffic }, todayMovements] = await Promise.all([
-    fetchStats(),
+  const [daily, todayMovements] = await Promise.all([
+    fetchDailyStats(),
     fetchTodayMovements(),
   ])
 
   const todayCuts = daily?.total_cuts ?? 0
   const todayRevenue = daily?.total_revenue ?? 0
-  const weeklyCuts = weekly?.total_cuts ?? 0
-  const weeklyRevenue = weekly?.total_revenue ?? 0
-  const monthlyCuts = monthly?.total_cuts ?? 0
-  const monthlyRevenue = monthly?.total_revenue ?? 0
+
+  const movementsSection = (
+    <>
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        Movimientos de hoy
+      </h2>
+      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
+        {todayMovements.length === 0 ? (
+          <p className="px-4 py-5 text-sm text-gray-400">Todavía no hay cobros hoy.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {todayMovements.map((m) => (
+              <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-gray-900">
+                    {m.clients?.name ?? 'Cliente'}
+                  </p>
+                  <p className="truncate text-xs text-gray-400">
+                    {m.services?.name ?? 'Servicio'}
+                    {m.loyalty_discount_applied ? ' · descuento aplicado' : ''}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-bold text-gray-900">{formatARS(m.price_charged)}</p>
+                  <p className="text-xs text-gray-400">{formatMovementTime(m.created_at)}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
+  )
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="mb-6 text-xl font-bold text-gray-900">Dashboard</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <a
+          href="/api/admin/export/cuts"
+          download
+          className="rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        >
+          Exportar XLSX
+        </a>
+      </div>
 
-      {/* ── Today — featured, largest, always visible above the fold ── */}
-      <section aria-labelledby="today-heading" className="mb-4">
-        <h2 id="today-heading" className="sr-only">
-          Hoy
-        </h2>
+      {/* ── Today ── */}
+      <section className="mb-4">
         <div className="grid grid-cols-2 gap-3">
           <StatsCard
             label="Cortes hoy"
@@ -182,90 +131,12 @@ export default async function DashboardPage() {
             subtitle={todayCuts === 0 ? 'Sin cortes hoy' : undefined}
             featured
           />
-          <StatsCard
-            label="Ingresos hoy"
-            value={formatARS(todayRevenue)}
-            featured
-          />
+          <StatsCard label="Ingresos hoy" value={formatARS(todayRevenue)} featured />
         </div>
       </section>
 
-      {/* ── This week ── */}
-      <section aria-labelledby="week-heading" className="mb-4">
-        <h2
-          id="week-heading"
-          className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500"
-        >
-          Esta semana
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <StatsCard
-            label="Cortes"
-            value={String(weeklyCuts)}
-            subtitle={weeklyCuts === 1 ? '1 corte' : undefined}
-          />
-          <StatsCard label="Ingresos" value={formatARS(weeklyRevenue)} />
-        </div>
-      </section>
-
-      {/* ── This month ── */}
-      <section aria-labelledby="month-heading" className="mb-6">
-        <h2
-          id="month-heading"
-          className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500"
-        >
-          Este mes
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <StatsCard label="Cortes" value={String(monthlyCuts)} />
-          <StatsCard label="Ingresos" value={formatARS(monthlyRevenue)} />
-        </div>
-      </section>
-
-      {/* ── Today's movements ── */}
-      <section aria-labelledby="movements-heading" className="mb-6">
-        <h2
-          id="movements-heading"
-          className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500"
-        >
-          Movimientos de hoy
-        </h2>
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
-          {todayMovements.length === 0 ? (
-            <p className="px-4 py-5 text-sm text-gray-400">Todavía no hay cobros hoy.</p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {todayMovements.map((m) => (
-                <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-gray-900">
-                      {m.clients?.name ?? 'Cliente'}
-                    </p>
-                    <p className="truncate text-xs text-gray-400">
-                      {m.services?.name ?? 'Servicio'}{m.loyalty_discount_applied ? ' · descuento aplicado' : ''}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-bold text-gray-900">{formatARS(m.price_charged)}</p>
-                    <p className="text-xs text-gray-400">{formatMovementTime(m.created_at)}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-
-      {/* ── Charts ── */}
-      <section aria-labelledby="charts-heading" className="mb-6">
-        <h2
-          id="charts-heading"
-          className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
-        >
-          Evolución del negocio
-        </h2>
-        <DashboardCharts />
-      </section>
+      {/* ── Period stats + movements + charts (shared demo state) ── */}
+      <DashboardClient movements={movementsSection} />
     </div>
   )
 }

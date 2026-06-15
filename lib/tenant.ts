@@ -5,7 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
  * Override via NEXT_PUBLIC_TENANT_ID when deploying a second tenant.
  */
 export const TENANT_ID =
-  process.env.NEXT_PUBLIC_TENANT_ID ?? '00000000-0000-0000-0000-000000000001'
+  process.env.TENANT_ID ?? process.env.NEXT_PUBLIC_TENANT_ID ?? '00000000-0000-0000-0000-000000000001'
 
 /**
  * Returns the tenant ID for the current request.
@@ -18,8 +18,8 @@ export const TENANT_ID =
  * For the single-tenant MVP, the env var path is always taken.
  */
 export async function getTenantId(supabase: SupabaseClient): Promise<string> {
-  if (process.env.NEXT_PUBLIC_TENANT_ID) {
-    return process.env.NEXT_PUBLIC_TENANT_ID
+  if (process.env.TENANT_ID ?? process.env.NEXT_PUBLIC_TENANT_ID) {
+    return (process.env.TENANT_ID ?? process.env.NEXT_PUBLIC_TENANT_ID)!
   }
 
   const {

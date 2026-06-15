@@ -235,13 +235,10 @@ function formatCompletedDate(iso: string): string {
 export default async function TurnosPage({
   searchParams,
 }: {
-  searchParams: { date?: string }
+  searchParams: { date?: string; view?: string }
 }) {
-  // Auth guard (layout already checks, but belt-and-suspenders)
   const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const today = getTodayBuenosAires()
@@ -249,6 +246,7 @@ export default async function TurnosPage({
     searchParams.date && /^\d{4}-\d{2}-\d{2}$/.test(searchParams.date)
       ? searchParams.date
       : today
+  const mobileView = searchParams.view ?? 'agenda'
 
   const [bookings, pendingBookings, completedBookings, activeBookings] = await Promise.all([
     fetchBookings(targetDate),
@@ -262,12 +260,37 @@ export default async function TurnosPage({
   const nextDate = shiftDate(targetDate, +1)
   const isToday = targetDate === today
 
+  const tabClass = (view: string) =>
+    [
+      'flex-1 py-2 text-xs font-semibold transition-colors',
+      mobileView === view
+        ? 'border-b-2 border-gray-900 dark:border-white text-gray-900 dark:text-white'
+        : 'text-gray-400 dark:text-gray-500',
+    ].join(' ')
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
+
+    {/* ── Mobile tab bar ─────────────────────────────────────────────────── */}
+    <div className="mb-4 flex border-b border-gray-200 dark:border-gray-700 lg:hidden">
+      <Link href={`/turnos?date=${targetDate}&view=active`} className={tabClass('active')}>
+        Por confirmar {activeBookings.length > 0 && `(${activeBookings.length})`}
+      </Link>
+      <Link href={`/turnos?date=${targetDate}&view=agenda`} className={tabClass('agenda')}>
+        Agenda
+      </Link>
+      <Link href={`/turnos?date=${targetDate}&view=history`} className={tabClass('history')}>
+        Historial
+      </Link>
+    </div>
+
     <div className="flex gap-5 items-start">
 
     {/* ── Left: pending + confirmed ─────────────────────────────────────── */}
-    <aside className="hidden w-64 shrink-0 lg:block">
+    <aside className={[
+      'w-full lg:w-64 shrink-0',
+      mobileView === 'active' ? 'block lg:block' : 'hidden lg:block',
+    ].join(' ')}>
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
         Por confirmar / Confirmados ({activeBookings.length})
       </h2>
@@ -310,7 +333,7 @@ export default async function TurnosPage({
       )}
     </aside>
 
-    <div className="min-w-0 flex-1">
+    <div className={['min-w-0 flex-1', mobileView === 'agenda' ? 'block lg:block' : 'hidden lg:block'].join(' ')}>
 
       {/* ── Pending section ─────────────────────────────────────────────── */}
       {pendingBookings.length > 0 && (
@@ -446,7 +469,10 @@ export default async function TurnosPage({
     </div>
 
     {/* ── Completed history ────────────────────────────────────────────── */}
-    <aside className="hidden w-72 shrink-0 lg:block">
+    <aside className={[
+      'w-full lg:w-72 shrink-0',
+      mobileView === 'history' ? 'block lg:block' : 'hidden lg:block',
+    ].join(' ')}>
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
         Historial completados ({completedBookings.length})
       </h2>

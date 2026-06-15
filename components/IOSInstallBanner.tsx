@@ -45,7 +45,7 @@ export default function IOSInstallBanner() {
     <div
       role="banner"
       aria-label="Install app prompt"
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-center gap-3 border-t border-zinc-200 bg-white px-4 py-3 shadow-lg"
+      className="fixed bottom-16 left-0 right-0 z-40 flex items-center gap-3 border-t border-zinc-200 bg-white dark:bg-gray-900 dark:border-gray-700 px-4 py-3 shadow-lg"
     >
       {/* Share icon — matches iOS share sheet icon */}
       <div className="flex-shrink-0 text-zinc-500" aria-hidden="true">
