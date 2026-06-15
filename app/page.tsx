@@ -243,7 +243,7 @@ export default async function HomePage() {
                 <div
                   key={n}
                   className={[
-                    'flex h-12 w-12 flex-col items-center justify-center rounded-xl text-sm font-black',
+                    'flex h-12 w-12 flex-col items-center justify-center rounded-full text-sm font-black',
                     isFree
                       ? 'bg-green-500/20 text-green-400 ring-2 ring-green-500/40'
                       : isDiscount
