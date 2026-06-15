@@ -107,13 +107,13 @@ export function getLoyaltyStatusLabel(cycleCount: number, config: LoyaltyConfig)
   // e.g. cycleCount=1, discount_at=3 → 3-1=2 more cuts needed
   const cutsToDiscount = config.discount_at - cycleCount
   if (cutsToDiscount > 0 && cycleCount < config.discount_at) {
-    return `${cutsToDiscount} ${cutsToDiscount === 1 ? 'corte' : 'cortes'} para tu descuento`
+    return `✂️ ${cutsToDiscount} ${cutsToDiscount === 1 ? 'corte' : 'cortes'} para tu próximo descuento del ${config.discount_pct}% 🎉`
   }
 
   const cutsToFree = config.free_at - cycleCount
   if (cutsToFree > 0) {
-    return `${cutsToFree} ${cutsToFree === 1 ? 'corte' : 'cortes'} para tu corte gratis`
+    return `✂️ ${cutsToFree} ${cutsToFree === 1 ? 'corte' : 'cortes'} para tu próximo corte gratis 🎉`
   }
 
-  return `${cycleCount} ${cycleCount === 1 ? 'corte' : 'cortes'} en el ciclo actual`
+  return `✂️ ${cycleCount} ${cycleCount === 1 ? 'corte' : 'cortes'} en el ciclo actual`
 }
