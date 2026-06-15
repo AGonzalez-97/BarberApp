@@ -169,7 +169,6 @@ export default async function HomePage() {
                 >
                   <div>
                     <p className="font-bold text-zinc-900">{svc.name}</p>
-                    <p className="text-sm text-zinc-400">{svc.duration_minutes} min</p>
                   </div>
                   <span className="shrink-0 rounded-xl bg-zinc-900 px-4 py-2 text-base font-black text-white">
                     {formatARS(svc.price_ars)}
