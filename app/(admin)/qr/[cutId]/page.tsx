@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
-import { cookies } from 'next/headers'
+
 import { TENANT_ID } from '@/lib/tenant'
 import QRPaymentScreen from '@/components/admin/QRPaymentScreen'
 
@@ -10,8 +10,7 @@ type PageProps = {
 }
 
 export default async function QRPage({ params }: PageProps) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(cookieStore)
+  const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()

@@ -9,8 +9,7 @@ function isIOS(): boolean {
 }
 
 function isStandalone(): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (navigator as any).standalone === true
+  return (navigator as Navigator & { standalone?: boolean }).standalone === true
 }
 
 function isDismissed(): boolean {

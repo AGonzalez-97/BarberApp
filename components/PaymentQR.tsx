@@ -67,6 +67,7 @@ export default function PaymentQR({ alias, amount, isFree = false }: PaymentQRPr
         <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
       ) : qrDataUrl ? (
         <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={qrDataUrl}
             alt={`QR de pago — alias ${alias}`}
