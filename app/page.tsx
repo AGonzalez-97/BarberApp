@@ -240,7 +240,7 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-10 text-center">
-            <Link href="/book" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-zinc-900 transition-opacity hover:opacity-90">
+            <Link href="/book" className="inline-flex h-12 items-center gap-2 rounded-xl !bg-white px-6 text-sm font-bold !text-zinc-900 transition-opacity hover:opacity-90">
               Empezar a sumar puntos
             </Link>
           </div>

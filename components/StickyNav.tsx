@@ -82,7 +82,7 @@ export function StickyNav() {
           <div className="hidden shrink-0 items-center gap-2 md:flex">
             <Link
               href="/book"
-              className="shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-bold text-zinc-900 transition-all hover:bg-zinc-100 active:scale-95"
+              className="shrink-0 rounded-xl !bg-white px-4 py-2 text-sm font-bold !text-zinc-900 transition-all hover:!bg-zinc-100 active:scale-95"
             >
               Reservar
             </Link>
@@ -148,7 +148,7 @@ export function StickyNav() {
                 <Link
                   href="/book"
                   onClick={closeMenu}
-                  className="flex h-14 w-full items-center justify-center rounded-2xl bg-white text-base font-bold text-zinc-900 transition-all hover:bg-zinc-100 active:scale-[0.98]"
+                  className="flex h-14 w-full items-center justify-center rounded-2xl !bg-white text-base font-bold !text-zinc-900 transition-all hover:!bg-zinc-100 active:scale-[0.98]"
                 >
                   Reservar turno
                 </Link>
