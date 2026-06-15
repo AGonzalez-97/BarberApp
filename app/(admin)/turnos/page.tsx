@@ -13,6 +13,7 @@ type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_s
 interface BookingRow {
   id: string
   starts_at: string
+  created_at: string
   status: BookingStatus
   clients: { name: string; phone: string } | null
   services: { name: string } | null
@@ -109,6 +110,39 @@ function StatusBadge({ status }: { status: BookingStatus }) {
   )
 }
 
+// ─── Conflict detection ───────────────────────────────────────────────────────
+
+const ACTIVE_STATUSES: BookingStatus[] = ['pending', 'confirmed']
+
+/**
+ * Returns a Set of booking IDs that are NOT the first to request an active slot.
+ * Only flags bookings with status pending or confirmed that share a starts_at
+ * with at least one other active booking.
+ */
+function getConflictingIds(bookings: BookingRow[]): Set<string> {
+  const slotMap = new Map<string, BookingRow[]>()
+
+  for (const b of bookings) {
+    if (!ACTIVE_STATUSES.includes(b.status)) continue
+    const rows = slotMap.get(b.starts_at) ?? []
+    rows.push(b)
+    slotMap.set(b.starts_at, rows)
+  }
+
+  const conflicting = new Set<string>()
+  for (const rows of slotMap.values()) {
+    if (rows.length < 2) continue
+    // Sort by created_at; skip the first (priority) and mark the rest
+    const sorted = [...rows].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )
+    for (let i = 1; i < sorted.length; i++) {
+      conflicting.add(sorted[i].id)
+    }
+  }
+  return conflicting
+}
+
 // ─── Data fetching ────────────────────────────────────────────────────────────
 
 async function fetchBookings(date: string): Promise<BookingRow[]> {
@@ -119,11 +153,12 @@ async function fetchBookings(date: string): Promise<BookingRow[]> {
 
   const { data, error } = await service
     .from('bookings')
-    .select('id, starts_at, status, clients ( name, phone ), services ( name )')
+    .select('id, starts_at, created_at, status, clients ( name, phone ), services ( name )')
     .eq('tenant_id', TENANT_ID)
     .gte('starts_at', dayStart)
     .lte('starts_at', dayEnd)
     .order('starts_at', { ascending: true })
+    .order('created_at', { ascending: true })
     .returns<BookingRow[]>()
 
   if (error) {
@@ -155,6 +190,7 @@ export default async function TurnosPage({
       : today
 
   const bookings = await fetchBookings(targetDate)
+  const conflictingIds = getConflictingIds(bookings)
 
   const prevDate = shiftDate(targetDate, -1)
   const nextDate = shiftDate(targetDate, +1)
@@ -213,39 +249,52 @@ export default async function TurnosPage({
         </div>
       ) : (
         <ul className="space-y-3" aria-label="Lista de turnos">
-          {bookings.map((booking) => (
-            <li key={booking.id}>
-              <Link
-                href={`/turnos/${booking.id}`}
-                className="block rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-gray-200 transition-shadow hover:shadow-md active:shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  {/* Time */}
-                  <span className="min-w-[46px] rounded-lg bg-gray-900 px-2 py-1 text-center text-sm font-bold tabular-nums text-white">
-                    {formatTime(booking.starts_at)}
-                  </span>
+          {bookings.map((booking) => {
+            const isConflict = conflictingIds.has(booking.id)
+            return (
+              <li key={booking.id}>
+                <Link
+                  href={`/turnos/${booking.id}`}
+                  className={[
+                    'block rounded-2xl bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md active:shadow-sm',
+                    isConflict
+                      ? 'ring-2 ring-orange-400'
+                      : 'ring-1 ring-gray-200',
+                  ].join(' ')}
+                >
+                  {isConflict && (
+                    <p className="mb-2 text-xs font-semibold text-orange-600">
+                      ⚠ Conflicto de horario — solicitado después
+                    </p>
+                  )}
+                  <div className="flex items-start justify-between gap-3">
+                    {/* Time */}
+                    <span className="min-w-[46px] rounded-lg bg-gray-900 px-2 py-1 text-center text-sm font-bold tabular-nums text-white">
+                      {formatTime(booking.starts_at)}
+                    </span>
 
-                  {/* Client + service */}
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-semibold text-gray-900">
-                      {booking.clients?.name ?? 'Cliente desconocido'}
-                    </p>
-                    <p className="truncate text-sm text-gray-500">
-                      {booking.services?.name ?? '—'}
-                      {booking.clients?.phone && (
-                        <span className="ml-2 text-gray-400">
-                          {booking.clients.phone}
-                        </span>
-                      )}
-                    </p>
+                    {/* Client + service */}
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate font-semibold text-gray-900">
+                        {booking.clients?.name ?? 'Cliente desconocido'}
+                      </p>
+                      <p className="truncate text-sm text-gray-500">
+                        {booking.services?.name ?? '—'}
+                        {booking.clients?.phone && (
+                          <span className="ml-2 text-gray-400">
+                            {booking.clients.phone}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Status badge */}
+                    <StatusBadge status={booking.status} />
                   </div>
-
-                  {/* Status badge */}
-                  <StatusBadge status={booking.status} />
-                </div>
-              </Link>
-            </li>
-          ))}
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

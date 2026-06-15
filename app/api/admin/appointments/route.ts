@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
       id,
       starts_at,
       ends_at,
+      created_at,
       status,
       notes,
       clients ( id, name, phone ),
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
     .gte('starts_at', dayStart)
     .lte('starts_at', dayEnd)
     .order('starts_at', { ascending: true })
+    .order('created_at', { ascending: true })
 
   if (error) {
     console.error('[GET /api/admin/appointments]', error)

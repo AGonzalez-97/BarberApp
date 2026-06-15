@@ -17,6 +17,7 @@ interface BookingDetail {
   id: string
   starts_at: string
   ends_at: string
+  created_at: string
   status: BookingStatus
   notes: string | null
   clients: {
@@ -90,6 +91,7 @@ async function fetchBookingDetail(id: string): Promise<BookingDetail | null> {
       id,
       starts_at,
       ends_at,
+      created_at,
       status,
       notes,
       clients ( id, name, phone ),
@@ -214,10 +216,20 @@ export default async function BookingDetailPage({
         {/* Date/time */}
         <div className="mb-4">
           <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-            Fecha y hora
+            Fecha y hora del turno
           </p>
           <p className="mt-0.5 font-semibold capitalize text-gray-900">
             {formatDateTime(booking.starts_at)}
+          </p>
+        </div>
+
+        {/* Request time — shows when client submitted the booking */}
+        <div className="mb-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            Solicitud recibida
+          </p>
+          <p className="mt-0.5 text-sm text-gray-700">
+            {formatDateTime(booking.created_at)}
           </p>
         </div>
 
