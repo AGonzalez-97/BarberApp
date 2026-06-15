@@ -128,12 +128,9 @@ export default async function HomePage() {
         <div className="flex flex-col items-center gap-3 sm:flex-row">
           <a
             href="#servicios"
-            className="group inline-flex h-14 items-center gap-2 rounded-2xl bg-white px-8 text-base font-bold text-zinc-900 shadow-lg transition-all hover:bg-zinc-100 active:scale-95"
+            className="inline-flex h-14 items-center rounded-2xl border border-white/20 bg-white/10 px-8 text-base font-bold text-white shadow-lg backdrop-blur-sm transition-all hover:bg-white/20 active:scale-95"
           >
             Ver servicios
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
           </a>
         </div>
 
