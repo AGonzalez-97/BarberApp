@@ -24,22 +24,18 @@ export function StickyNav() {
     return () => window.removeEventListener('scroll', handler)
   }, [])
 
-  // Close menu on scroll (with small delay so anchor navigation doesn't immediately close it)
-  useEffect(() => {
-    if (!menuOpen) return
-    let timeout: ReturnType<typeof setTimeout>
-    const close = () => setMenuOpen(false)
-    timeout = setTimeout(() => {
-      window.addEventListener('scroll', close, { once: true, passive: true })
-    }, 400)
-    return () => {
-      clearTimeout(timeout)
-      window.removeEventListener('scroll', close)
-    }
-  }, [menuOpen])
-
   function closeMenu() {
     setMenuOpen(false)
+  }
+
+  function handleNavClick(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    e.preventDefault()
+    setMenuOpen(false)
+    // Wait for the panel close animation before scrolling so layout shift doesn't misplace the target
+    setTimeout(() => {
+      const target = document.querySelector(href)
+      if (target) target.scrollIntoView({ behavior: 'smooth' })
+    }, 320)
   }
 
   return (
@@ -54,7 +50,7 @@ export function StickyNav() {
       >
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
           {/* Logo */}
-          <a href="#inicio" onClick={closeMenu} className="flex shrink-0 items-center gap-2">
+          <a href="#inicio" onClick={(e) => handleNavClick(e, '#inicio')} className="flex shrink-0 items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-400/10">
               <svg viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
                 <circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" />
@@ -131,7 +127,7 @@ export function StickyNav() {
                     >
                       <a
                         href={href}
-                        onClick={closeMenu}
+                        onClick={(e) => handleNavClick(e, href)}
                         className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white active:bg-white/10"
                       >
                         <span>{label}</span>
