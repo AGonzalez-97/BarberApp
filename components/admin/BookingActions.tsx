@@ -168,7 +168,7 @@ export default function BookingActions({
 
         {/* Navigate to QR payment */}
         <a
-          href={`/admin/qr/${completeResult.cut_id}`}
+          href={`/qr/${completeResult.cut_id}`}
           className="flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-gray-900 px-6 text-lg font-semibold text-white transition-opacity active:opacity-80"
         >
           Cobrar
