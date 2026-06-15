@@ -128,6 +128,17 @@ async function fetchBookingDetail(id: string): Promise<BookingDetail | null> {
  * Computes the current loyalty cycle count for a client by counting
  * cut_completed events since the last cycle_reset.
  */
+async function fetchCutCompletedAt(bookingId: string): Promise<string | null> {
+  const service = createServiceClient()
+  const { data } = await service
+    .from('cuts')
+    .select('created_at')
+    .eq('booking_id', bookingId)
+    .eq('tenant_id', TENANT_ID)
+    .single<{ created_at: string }>()
+  return data?.created_at ?? null
+}
+
 async function fetchLoyaltyCycleCount(clientId: string): Promise<number> {
   const service = createServiceClient()
 
@@ -197,9 +208,10 @@ export default async function BookingDetailPage({
 
   if (!booking) notFound()
 
-  const cycleCount = booking.clients?.id
-    ? await fetchLoyaltyCycleCount(booking.clients.id)
-    : 0
+  const [cycleCount, cutCompletedAt] = await Promise.all([
+    booking.clients?.id ? fetchLoyaltyCycleCount(booking.clients.id) : Promise.resolve(0),
+    booking.status === 'completed' ? fetchCutCompletedAt(booking.id) : Promise.resolve(null),
+  ])
 
   const loyaltyLabel = getLoyaltyStatusLabel(cycleCount, loyaltyConfig)
 
@@ -250,6 +262,18 @@ export default async function BookingDetailPage({
             {formatDateTime(booking.created_at)}
           </p>
         </div>
+
+        {/* Completed at */}
+        {cutCompletedAt && (
+          <div className="mb-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Turno finalizado
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-green-700">
+              {formatDateTime(cutCompletedAt)}
+            </p>
+          </div>
+        )}
 
         {/* Service */}
         {booking.services && (
