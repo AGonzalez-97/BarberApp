@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { TENANT_ID } from '@/lib/tenant'
 import StatsCard from '@/components/admin/StatsCard'
 
@@ -58,7 +59,52 @@ interface LowTrafficSlot {
   avg_bookings: number
 }
 
+interface TodayMovement {
+  id: string
+  created_at: string
+  price_charged: number
+  loyalty_discount_applied: boolean
+  clients: { name: string } | null
+  services: { name: string } | null
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getTodayARGRange(): { start: Date; end: Date } {
+  const now = new Date()
+  // Argentina is UTC-3 (no DST). Subtract 3h to get the Argentina date.
+  const argNow = new Date(now.getTime() - 3 * 60 * 60 * 1000)
+  const date = argNow.toISOString().slice(0, 10) // "YYYY-MM-DD"
+  // Midnight ART = 03:00 UTC
+  const start = new Date(`${date}T03:00:00.000Z`)
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
+  return { start, end }
+}
+
+function formatMovementTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'America/Argentina/Buenos_Aires',
+  })
+}
+
 // ─── Data fetching ────────────────────────────────────────────────────────────
+
+async function fetchTodayMovements(): Promise<TodayMovement[]> {
+  const service = createServiceClient()
+  const { start, end } = getTodayARGRange()
+  const { data } = await service
+    .from('cuts')
+    .select('id, created_at, price_charged, loyalty_discount_applied, clients ( name ), services ( name )')
+    .eq('tenant_id', TENANT_ID)
+    .gte('created_at', start.toISOString())
+    .lt('created_at', end.toISOString())
+    .order('created_at', { ascending: false })
+    .returns<TodayMovement[]>()
+  return data ?? []
+}
 
 async function fetchStats() {
   const supabase = createClient()
@@ -107,7 +153,10 @@ async function fetchStats() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const { daily, weekly, monthly, lowTraffic } = await fetchStats()
+  const [{ daily, weekly, monthly, lowTraffic }, todayMovements] = await Promise.all([
+    fetchStats(),
+    fetchTodayMovements(),
+  ])
 
   const todayCuts = daily?.total_cuts ?? 0
   const todayRevenue = daily?.total_revenue ?? 0
@@ -169,6 +218,40 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 gap-3">
           <StatsCard label="Cortes" value={String(monthlyCuts)} />
           <StatsCard label="Ingresos" value={formatARS(monthlyRevenue)} />
+        </div>
+      </section>
+
+      {/* ── Today's movements ── */}
+      <section aria-labelledby="movements-heading" className="mb-6">
+        <h2
+          id="movements-heading"
+          className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500"
+        >
+          Movimientos de hoy
+        </h2>
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
+          {todayMovements.length === 0 ? (
+            <p className="px-4 py-5 text-sm text-gray-400">Todavía no hay cobros hoy.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {todayMovements.map((m) => (
+                <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-gray-900">
+                      {m.clients?.name ?? 'Cliente'}
+                    </p>
+                    <p className="truncate text-xs text-gray-400">
+                      {m.services?.name ?? 'Servicio'}{m.loyalty_discount_applied ? ' · descuento aplicado' : ''}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-bold text-gray-900">{formatARS(m.price_charged)}</p>
+                    <p className="text-xs text-gray-400">{formatMovementTime(m.created_at)}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
