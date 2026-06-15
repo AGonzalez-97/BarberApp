@@ -130,7 +130,7 @@ function getConflictingIds(bookings: BookingRow[]): Set<string> {
   }
 
   const conflicting = new Set<string>()
-  for (const rows of slotMap.values()) {
+  for (const rows of Array.from(slotMap.values())) {
     if (rows.length < 2) continue
     // Sort by created_at; skip the first (priority) and mark the rest
     const sorted = [...rows].sort(
