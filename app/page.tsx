@@ -358,7 +358,10 @@ export default async function HomePage() {
                   <line x1="8.12" y1="8.12" x2="12" y2="12" />
                 </svg>
               </div>
-              <span className="font-black text-white">Axel Barber Club</span>
+              <div>
+                <span className="font-black text-white">Axel Barber Club</span>
+                <p className="text-[10px] font-medium tracking-widest text-zinc-500">Tu look, Tu Regla</p>
+              </div>
             </div>
 
             <nav aria-label="Navegación del footer">
