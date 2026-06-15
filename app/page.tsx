@@ -269,26 +269,22 @@ export default async function HomePage() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-start gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/5 px-5 py-4">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-xs font-black text-amber-400">
+            <div className="flex items-center gap-4 rounded-2xl border border-amber-400/30 bg-amber-400/10 px-5 py-5">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-xl font-black text-amber-400">
                 {discountAt}
               </span>
               <div>
-                <p className="font-semibold text-white">Descuento especial</p>
-                <p className="text-sm text-zinc-400">
-                  En tu corte N°{discountAt} del ciclo aplicamos un {discountPct}% de descuento automáticamente.
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-amber-400">Corte N°{discountAt}</p>
+                <p className="mt-0.5 font-bold text-white">Te aplicamos un {discountPct}% de descuento</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-2xl border border-green-500/20 bg-green-500/5 px-5 py-4">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-xs font-black text-green-400">
+            <div className="flex items-center gap-4 rounded-2xl border border-green-400/30 bg-green-400/10 px-5 py-5">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-400/20 text-xl font-black text-green-400">
                 {freeAt}
               </span>
               <div>
-                <p className="font-semibold text-white">Corte gratis</p>
-                <p className="text-sm text-zinc-400">
-                  Tu corte N°{freeAt} es completamente gratis. El ciclo reinicia automáticamente.
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-green-400">Corte N°{freeAt}</p>
+                <p className="mt-0.5 font-bold text-white">Tu corte es completamente gratis 🎉</p>
               </div>
             </div>
           </div>
