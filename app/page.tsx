@@ -353,7 +353,16 @@ export default async function HomePage() {
           <div className="space-y-1 text-center text-xs text-zinc-600">
             <p>© {new Date().getFullYear()} Axel Barber Club · Todos los derechos reservados</p>
             <p className="pt-1">
-              Desarrollado por <span className="text-zinc-400">Axel Gonzalez</span>, Tafi Viejo
+              Desarrollado por{' '}
+              <a
+                href="https://www.instagram.com/axel.dev97/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-400 underline underline-offset-2 hover:text-white transition-colors"
+              >
+                Axel Gonzalez
+              </a>
+              , Tafi Viejo
             </p>
           </div>
         </div>
