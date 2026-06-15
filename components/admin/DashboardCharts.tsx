@@ -27,13 +27,15 @@ function formatARS(v: number): string {
   return '$' + Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatTooltipRevenue(value: any) {
+// biome-ignore lint: recharts formatter type is loose
+// eslint-disable-next-line
+function formatTooltipRevenue(value: unknown) {
   return [formatARS(Number(value ?? 0)), 'Ingresos'] as [string, string]
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatTooltipCuts(value: any) {
+// biome-ignore lint: recharts formatter type is loose
+// eslint-disable-next-line
+function formatTooltipCuts(value: unknown) {
   return [String(value ?? 0), 'Cortes'] as [string, string]
 }
 
