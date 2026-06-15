@@ -83,6 +83,7 @@ export function DateStep({ serviceId }: DateStepProps) {
   const selectedRef = useRef<HTMLButtonElement | null>(null)
 
   const [tenantConfig, setTenantConfig] = useState<TenantConfig | null>(null)
+  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
   const [configError, setConfigError] = useState<string | null>(null)
 
   const [selectedDate, setSelectedDate] = useState<string>('')
@@ -93,11 +94,14 @@ export function DateStep({ serviceId }: DateStepProps) {
   const [slotsError, setSlotsError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/tenant')
-      .then((r) => r.json())
-      .then((data: TenantConfig & { error?: string }) => {
-        if (data.error) throw new Error(data.error)
-        setTenantConfig(data)
+    Promise.all([
+      fetch('/api/tenant').then((r) => r.json()),
+      fetch('/api/blocked-dates').then((r) => r.json()),
+    ])
+      .then(([tenant, blocked]: [TenantConfig & { error?: string }, { dates?: string[] }]) => {
+        if (tenant.error) throw new Error(tenant.error)
+        setTenantConfig(tenant)
+        setBlockedDates(new Set(blocked.dates ?? []))
       })
       .catch(() => setConfigError('No se pudo cargar la configuración. Intentá de nuevo.'))
   }, [])
@@ -213,21 +217,23 @@ export function DateStep({ serviceId }: DateStepProps) {
                 <div className="grid grid-cols-7 gap-1">
                   {week.map((day) => {
                     const isSelected = selectedDate === day.dateStr
+                    const isBlocked = blockedDates.has(day.dateStr)
+                    const isAvailable = day.enabled && !isBlocked
                     return (
                       <button
                         key={day.dateStr}
                         ref={isSelected ? selectedRef : null}
-                        onClick={() => day.enabled && setSelectedDate(day.dateStr)}
-                        disabled={!day.enabled}
+                        onClick={() => isAvailable && setSelectedDate(day.dateStr)}
+                        disabled={!isAvailable}
                         aria-pressed={isSelected}
-                        aria-label={`${day.dayName} ${day.dayNum}`}
+                        aria-label={`${day.dayName} ${day.dayNum}${isBlocked ? ' — no disponible' : ''}`}
                         className={[
                           'flex h-10 w-full flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors',
                           isSelected
                             ? 'bg-gray-900 text-white'
-                            : day.isToday && day.enabled
+                            : day.isToday && isAvailable
                             ? 'ring-2 ring-gray-900 bg-white text-gray-900 hover:bg-gray-50'
-                            : day.enabled
+                            : isAvailable
                             ? 'bg-white text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                             : 'cursor-not-allowed bg-transparent text-gray-200',
                         ].join(' ')}
