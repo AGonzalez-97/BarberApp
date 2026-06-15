@@ -19,6 +19,13 @@ interface BookingRow {
   services: { name: string } | null
 }
 
+interface CompletedRow {
+  id: string
+  starts_at: string
+  clients: { name: string } | null
+  services: { name: string } | null
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
@@ -189,6 +196,28 @@ async function fetchBookings(date: string): Promise<BookingRow[]> {
   return data ?? []
 }
 
+async function fetchCompletedBookings(): Promise<CompletedRow[]> {
+  const service = createServiceClient()
+  const { data } = await service
+    .from('bookings')
+    .select('id, starts_at, clients ( name ), services ( name )')
+    .eq('tenant_id', TENANT_ID)
+    .eq('status', 'completed')
+    .order('starts_at', { ascending: false })
+    .limit(30)
+    .returns<CompletedRow[]>()
+  return data ?? []
+}
+
+function formatCompletedDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function TurnosPage({
@@ -209,9 +238,10 @@ export default async function TurnosPage({
       ? searchParams.date
       : today
 
-  const [bookings, pendingBookings] = await Promise.all([
+  const [bookings, pendingBookings, completedBookings] = await Promise.all([
     fetchBookings(targetDate),
     fetchPendingBookings(),
+    fetchCompletedBookings(),
   ])
   const conflictingIds = getConflictingIds(bookings)
 
@@ -220,7 +250,9 @@ export default async function TurnosPage({
   const isToday = targetDate === today
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <div className="mx-auto max-w-5xl px-4 py-6">
+    <div className="flex gap-6 items-start">
+    <div className="min-w-0 flex-1">
 
       {/* ── Pending section ─────────────────────────────────────────────── */}
       {pendingBookings.length > 0 && (
@@ -353,6 +385,43 @@ export default async function TurnosPage({
           })}
         </ul>
       )}
+    </div>
+
+    {/* ── Completed history ────────────────────────────────────────────── */}
+    <aside className="hidden w-72 shrink-0 lg:block">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        Historial completados ({completedBookings.length})
+      </h2>
+      {completedBookings.length === 0 ? (
+        <div className="rounded-2xl bg-white px-4 py-8 text-center text-sm text-gray-400 shadow-sm ring-1 ring-gray-200">
+          Sin turnos completados aún
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {completedBookings.map((b) => (
+            <li key={b.id}>
+              <Link
+                href={`/turnos/${b.id}`}
+                className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-gray-200 transition-shadow hover:shadow-md"
+              >
+                <span className="min-w-[40px] rounded-lg bg-green-100 px-1.5 py-1 text-center text-xs font-bold tabular-nums text-green-800">
+                  {formatTime(b.starts_at)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-gray-900">
+                    {b.clients?.name ?? '—'}
+                  </p>
+                  <p className="truncate text-xs text-gray-400">
+                    {formatCompletedDate(b.starts_at)} · {b.services?.name ?? '—'}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
+    </div>
     </div>
   )
 }
