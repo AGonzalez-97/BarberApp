@@ -188,8 +188,8 @@ export default async function HomePage() {
 
           <div className="overflow-hidden rounded-2xl border border-zinc-200">
             {[
-              { day: 'Lunes a viernes', hours: '9:00 – 19:00' },
-              { day: 'Sábados', hours: '9:00 – 19:00' },
+              { day: 'Lunes a viernes', hours: '9:00 – 21:00' },
+              { day: 'Sábados', hours: '9:00 – 21:00' },
               { day: 'Domingos', hours: 'Cerrado', closed: true },
             ].map((row, i, arr) => (
               <div
