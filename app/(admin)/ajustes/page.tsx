@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { TENANT_ID } from '@/lib/tenant'
 import BookingModeToggle from '@/components/admin/BookingModeToggle'
-import ShareBookingLink from '@/components/admin/ShareBookingLink'
 import EditAliasForm from '@/components/admin/EditAliasForm'
 
 export const dynamic = 'force-dynamic'
@@ -192,14 +191,6 @@ export default async function AjustesPage() {
           </nav>
         </section>
 
-        {/* ── Share booking link ───────────────────────────────────────── */}
-        <section className="rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-gray-200">
-          <h2 className="mb-1 text-sm font-semibold text-gray-700">Compartir turno online</h2>
-          <p className="mb-4 text-xs text-gray-400">
-            Mandales el link a tus clientes para que reserven solos.
-          </p>
-          <ShareBookingLink tenantSlug={tenant?.slug ?? 'leo-barber'} />
-        </section>
       </div>
     </div>
   )
