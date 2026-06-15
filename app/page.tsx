@@ -364,15 +364,6 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <nav aria-label="Navegación del footer">
-              <ul className="flex flex-wrap justify-center gap-4 text-sm text-zinc-500">
-                {([['#inicio', 'Inicio'], ['#servicios', 'Servicios'], ['#galeria', 'Galería'], ['#fidelizacion', 'Promos'], ['#ubicacion', 'Ubicación']] as [string, string][]).map(([href, label]) => (
-                  <li key={href}>
-                    <a href={href} className="transition-colors hover:text-zinc-300">{label}</a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
           </div>
 
           <div className="mb-8 flex flex-col items-center gap-3">
