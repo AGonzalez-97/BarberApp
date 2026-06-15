@@ -186,7 +186,7 @@ export default async function HomePage() {
             Galería
           </p>
           <h2 className="mb-2 text-center text-4xl font-black text-white">Nuestro Trabajo</h2>
-          <p className="mb-10 text-center text-sm text-zinc-400">Seguinos en Instagram para ver todos los trabajos</p>
+          <p className="mb-10 text-center text-sm text-zinc-400">Seguime en Instagram para ver todos los trabajos</p>
 
           {/* Placeholder grid — add real photos to /public/gallery/ to replace these */}
           <div className="grid grid-cols-3 gap-2">
