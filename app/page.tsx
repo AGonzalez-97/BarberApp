@@ -266,7 +266,7 @@ export default async function HomePage() {
               </span>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-amber-400">Corte N°{discountAt}</p>
-                <p className="mt-0.5 font-bold text-white">Te aplicamos un {discountPct}% de descuento</p>
+                <p className="mt-0.5 font-bold text-white">Te aplicamos un {discountPct}% de descuento en tu corte preferido</p>
               </div>
             </div>
             <div className="flex items-center gap-4 rounded-2xl border border-green-400/30 bg-green-400/10 px-5 py-5">
