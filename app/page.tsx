@@ -122,7 +122,7 @@ export default async function HomePage() {
         </h1>
         <p className="mb-10 text-4xl font-black tracking-tight text-amber-400 sm:text-5xl">Club</p>
         <p className="mb-10 max-w-sm text-lg text-zinc-400">
-          Reservá tu turno online en segundos.<br className="hidden sm:block" />Sin llamadas, sin esperas.
+          El mejor corte de Tafi Viejo te espera.<br className="hidden sm:block" />Reservá tu turno online en segundos.
         </p>
 
         <div className="flex flex-col items-center gap-3 sm:flex-row">
