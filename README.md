@@ -4,6 +4,8 @@ A production-ready, multi-tenant barbershop booking PWA built with Next.js 14, S
 
 > **Live demo:** [axelbarber.vercel.app](https://axelbarber.vercel.app)
 
+![Landing page](docs/screenshots/home-desktop.png)
+
 ---
 
 ## Features
