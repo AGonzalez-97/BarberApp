@@ -1,5 +1,11 @@
 # BarberApp
 
+![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ECF8E?logo=supabase&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white)
+
 A production-ready, multi-tenant barbershop booking PWA built with Next.js 14, Supabase, and Tailwind CSS. Designed for small barbershops in Argentina: mobile-first, installable as a PWA, with a full admin panel, loyalty rewards system, and hardened security posture.
 
 > **Live demo:** [axelbarber.vercel.app](https://axelbarber.vercel.app)
